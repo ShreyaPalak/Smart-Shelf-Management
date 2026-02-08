@@ -1,0 +1,76 @@
+.stock-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stock-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stock-sku {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+.stock-percentage {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.stock-bar-container {
+  width: 100%;
+  height: 24px;
+  background-color: #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.stock-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 12px;
+}
+
+.stock-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.stock-name {
+  color: #666;
+}
+
+.stock-quantity {
+  color: #999;
+  font-size: 12px;
+}
+
+.no-data {
+  text-align: center;
+  color: #999;
+  padding: 40px;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  border: 1px solid #ffcdd2;
+}
