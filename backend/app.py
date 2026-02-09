@@ -42,12 +42,25 @@ def detect_and_store():
         if request.files and 'image' in request.files:
             # Handle file upload
             file = request.files['image']
-            # Save file temporarily
+            # # Save file temporarily
+            # import os
+            # upload_dir = '../data/uploads'
+            # os.makedirs(upload_dir, exist_ok=True)
+            # image_path = os.path.join(upload_dir, file.filename)
+            # file.save(image_path)
+            
+            import uuid
+            from werkzeug.utils import secure_filename
+            
             import os
             upload_dir = '../data/uploads'
             os.makedirs(upload_dir, exist_ok=True)
-            image_path = os.path.join(upload_dir, file.filename)
+            filename = secure_filename(file.filename)
+            unique_name = f"{uuid.uuid4()}_{filename}"
+            image_path = os.path.join(upload_dir, unique_name)
             file.save(image_path)
+
+            
         elif request.json and 'image_path' in request.json:
             image_path = request.json['image_path']
         else:
@@ -81,6 +94,13 @@ def detect_and_store():
                 raw_data=raw_result
             )
             db.add(detection)
+            
+            snapshot = InventorySnapshot(
+                category_id=category.id,
+                count=data['count'],
+                timestamp=datetime.utcnow()
+            )
+            db.add(snapshot)
             stored_detections.append({
                 'category': category_name,
                 'count': data['count'],
@@ -92,12 +112,29 @@ def detect_and_store():
         
         db.commit()
         
+        db.commit()
+
         return jsonify({
             'success': True,
-            'detections': stored_detections,
+            'inventory': [
+                {
+                    'category': d['category'],
+                    'count': d['count'],
+                    'confidence': d['confidence'],
+                    'status': get_stock_status(
+                        d['count'],
+                        db.query(ProductCategory)
+                          .filter_by(name=d['category'])
+                          .first()
+                          .low_stock_threshold
+                    )
+                }
+                for d in stored_detections
+            ],
             'total_items': processed['total_items'],
             'timestamp': processed['timestamp']
-        })
+            })
+
         
     except Exception as e:
         db.rollback()

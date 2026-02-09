@@ -2,13 +2,14 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import TopNavigation from './components/TopNavigation';
+import ImageUpload from './components/ImageUpload';
 import Home from './pages/Home';
 import Analytics from './pages/Analytics';
 import Alerts from './pages/Alerts';
 
 function App() {
   return (
-    <Router>
+    <><ImageUpload /><Router>
       <div className="App">
         <TopNavigation />
         <Routes>
@@ -20,7 +21,7 @@ function App() {
           <p>Smart Shelf Management System – AI-based Inventory Monitoring</p>
         </footer>
       </div>
-    </Router>
+    </Router></>
   );
 }
 
