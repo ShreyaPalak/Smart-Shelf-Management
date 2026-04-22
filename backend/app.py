@@ -73,25 +73,11 @@ def detect_and_store():
             processed = detector.process_detection_result(raw_result)
             print(f"✓ Detection successful: {processed['total_items']} items found")
         except Exception as roboflow_err:
-            # Fallback to mock data for testing
             import traceback
             error_msg = f"{type(roboflow_err).__name__}: {str(roboflow_err)}"
-            print(f"❌ Roboflow API error: {error_msg}")
+            print(f"❌ Detection error: {error_msg}")
             print(f"Traceback:\n{traceback.format_exc()}")
-            print("Using mock detection data for testing...")
-            processed = {
-                'categories': {
-                    'Coca Cola 500ml': {'count': 12, 'avg_confidence': 0.94, 'bounding_boxes': []},
-                    'Lays Classic Chips': {'count': 8, 'avg_confidence': 0.91, 'bounding_boxes': []},
-                    'Milk 1L': {'count': 15, 'avg_confidence': 0.97, 'bounding_boxes': []},
-                    'Bread White': {'count': 5, 'avg_confidence': 0.88, 'bounding_boxes': []},
-                    'Eggs 12pk': {'count': 20, 'avg_confidence': 0.92, 'bounding_boxes': []},
-                },
-                'total_items': 60,
-                'timestamp': datetime.utcnow().isoformat(),
-                'raw_result': {},
-                'warning': f'Using mock data - Roboflow failed: {error_msg}'
-            }
+            raise  # Re-raise the error so client sees the actual issue
         
         # Store in database
         stored_detections = []
