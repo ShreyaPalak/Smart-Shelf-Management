@@ -2,6 +2,8 @@ from inference_sdk import InferenceHTTPClient
 from datetime import datetime
 from typing import Dict, List, Any
 import config
+import requests
+import os
 
 class DetectionProcessor:
     """Process YOLO detection results and extract structured data"""
@@ -22,14 +24,41 @@ class DetectionProcessor:
         Returns:
             Dictionary with detection results
         """
-        result = self.client.run_workflow(
-            workspace_name=config.ROBOFLOW_WORKSPACE,
-            workflow_id=config.ROBOFLOW_WORKFLOW_ID,
-            images={"image": image_path},
-            use_cache=True
-        )
-        
-        return result
+        # Try SDK methods first (different SDK versions expose different helpers)
+        last_exc = None
+        try:
+            if hasattr(self.client, 'run_workflow'):
+                return self.client.run_workflow(
+                    workspace_name=config.ROBOFLOW_WORKSPACE,
+                    workflow_id=config.ROBOFLOW_WORKFLOW_ID,
+                    images={"image": image_path},
+                    use_cache=True
+                )
+
+            if hasattr(self.client, 'infer'):
+                try:
+                    # some SDKs accept model_id format workspace/model
+                    model_id = f"{config.ROBOFLOW_WORKSPACE}/{config.ROBOFLOW_WORKFLOW_ID}"
+                    return self.client.infer(image_path, model_id=model_id)
+                except TypeError:
+                    return self.client.infer(image_path)
+        except Exception as e:
+            last_exc = e
+
+        # Fallback: call Roboflow serverless endpoint directly using requests
+        try:
+            url = f"{config.ROBOFLOW_API_URL.rstrip('/')}/{config.ROBOFLOW_WORKSPACE}/{config.ROBOFLOW_WORKFLOW_ID}?api_key={config.ROBOFLOW_API_KEY}"
+            # Roboflow expects the file part named 'file'
+            with open(image_path, 'rb') as fh:
+                files = {'file': (os.path.basename(image_path), fh, 'application/octet-stream')}
+                resp = requests.post(url, files=files, timeout=60)
+                resp.raise_for_status()
+                return resp.json()
+        except Exception as e2:
+            # If both SDK and direct request fail, raise the last SDK error or this one
+            if last_exc:
+                raise last_exc
+            raise e2
     
     def process_detection_result(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """
